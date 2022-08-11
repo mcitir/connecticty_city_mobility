@@ -3,7 +3,7 @@
 <!-- generated via generate_routefile() in run.py -->
 
 <routes>
-    <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="120" guiShape="passenger"/>
+    <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>
 
     <vehicle id="car1" type="CAR1" depart="0">
         <route edges="E0"/>

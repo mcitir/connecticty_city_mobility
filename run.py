@@ -15,6 +15,9 @@ import sys
 import optparse
 import random
 import time
+import sumolib.statistics
+from sumolib.xml import parse_fast_nested, parse_fast_structured
+from collections import OrderedDict
 
 # we need to import python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -37,7 +40,7 @@ def generate_routefile():
 <!-- generated via generate_routefile() in run.py -->
 
 <routes>
-    <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="120" guiShape="passenger"/>
+    <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>
 
     <vehicle id="car1" type="CAR1" depart="0">
         <route edges="E0"/>
@@ -74,6 +77,9 @@ def run():
             print("vehicle {} at position {}".format(veh_id, traci.vehicle.getPosition(veh_id)))
         step += 1
         # time.sleep(0.2)
+        print(sumolib.statistics.round(1.5))
+        s = sumolib.statistics.Statistics(10)
+        print(s.toString())
     traci.close()
     sys.stdout.flush()
 
@@ -98,14 +104,22 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo-gui')
 
     # first, generate the route file for this simulation
-    if os.path.exists("tripinfo.xml"):
-        update_routefile()
-    else:
-        generate_routefile()
+    # if os.path.exists("tripinfo.xml"):
+    #     update_routefile()
+    # else:
+    #     generate_routefile()
+    generate_routefile()
     # generate_netfile()
 
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
     traci.start([sumoBinary, "-c", "straight.sumocfg",
-                 "--tripinfo-output", "tripinfo.xml", "--start", "--quit-on-end"])
+                 "--tripinfo-output", "tripinfo.xml", "--tripinfo-output.write-unfinished", "True",
+                 "--start", "--quit-on-end", "--netstate-dump", "dump.xml"])
     run()
+    nested = OrderedDict((('vehicle ', ['id']), ('edge', ['id'])))
+    for step in parse_fast_nested('dump.xml', 'timestep', ['time'], 'vehicle', ['id', 'pos', 'speed']):
+        print(step)
+        print(step[1].pos)
+    test1 = list(parse_fast_nested('dump.xml', 'timestep', ['time'], 'vehicle', ['id', 'pos', 'speed']))
+    print(type(test1[-1][1][0]), test1[-1][1][1])
