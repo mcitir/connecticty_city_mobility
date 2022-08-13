@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- generated via generate_routefile() in run.py -->
-
+<!-- generated via update_routefile() in run.py -->
 <routes>
-    <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>
-
-    <vehicle id="car1" type="CAR1" depart="0">
-        <route edges="E0"/>
-    </vehicle>
+   <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>
+   <vehicle id="car1" type="CAR1" depart="0" departPos="16.69">
+       <route edges="E0"/>
+   </vehicle>
+   <vehicle id="car2" type="CAR1" depart="0" departPos="16.69">
+       <route edges="E0"/>
+   </vehicle>
 </routes>
-
