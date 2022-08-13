@@ -40,6 +40,7 @@ else:
 from sumolib import checkBinary  #
 import traci  # noqa
 import csv
+import dataframe_image as dfi
 
 
 def dump_xml_to_df(root):
@@ -184,6 +185,7 @@ if __name__ == "__main__":
     print(df_dump_xml.head(5))
 
     pd.DataFrame.to_csv(df_dump_xml, 'simulationStats.csv')
+    dfi.export(df_dump_xml, 'df_dump_xml.png', max_rows=20)
 
     # nested = OrderedDict((('vehicle ', ['id']), ('edge', ['id'])))
     # for step in parse_fast_nested('dump.xml', 'timestep', ['time'], 'vehicle', ['id', 'pos', 'speed']):
