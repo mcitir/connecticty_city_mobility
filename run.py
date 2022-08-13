@@ -44,33 +44,23 @@ import dataframe_image as dfi
 
 
 def dump_xml_to_df(root):
-    dataFrame1 = pd.DataFrame(columns=['time', 'carID', 'edgeID', 'laneID', 'pos', 'speed'])
+    df_total = pd.DataFrame(columns=['time', 'carID', 'edgeID', 'laneID', 'pos', 'speed'])
     for time in root:
-        #     print(time.attrib['time'])
-        for child in time:  # root[len(root)-1]:
+        for child in time:
             for child2 in child:
-                # print(child2)
-                # print(f"Lane:{child2.tag}, {child2.attrib}")
+
                 for child3 in child2:
-                    # print(f"Edge:{child.attrib['id']}, Lane:{child2.attrib['id']}, Vehicle: {child3.attrib}")
-                    # print(type(child3.attrib))
-                    # print(child3.attrib['id'])
-                    dict = {'time': str(time.attrib['time']),  # last_time_step),
-                            'carID': str(child3.attrib['id']),
-                            'edgeID': str(child.attrib['id']),
-                            'laneID': str(child2.attrib['id']),
-                            'pos': str(child3.attrib['pos']),
-                            'speed': str(child3.attrib['speed'])}
-                    temp_df = pd.DataFrame([dict])
-                    # display(temp_df)
-                    # print(type(dataFrame1))
-                    dataFrame1 = pd.concat([dataFrame1, temp_df], ignore_index=True, keys=['time', 'carID'])
-    dataFrame1 = dataFrame1.sort_values(['time', 'carID']).reset_index(drop=True)
-    return dataFrame1
+                    dictSeries = {'time': str(time.attrib['time']),
+                                  'carID': str(child3.attrib['id']),
+                                  'edgeID': str(child.attrib['id']),
+                                  'laneID': str(child2.attrib['id']),
+                                  'pos': str(child3.attrib['pos']),
+                                  'speed': str(child3.attrib['speed'])}
+                    temporary_df = pd.DataFrame([dictSeries])
+                    df_total = pd.concat([df_total, temporary_df], ignore_index=True, keys=['time', 'carID'])
+    df_total = df_total.sort_values(['time', 'carID']).reset_index(drop=True)
+    return df_total
 
-
-# def get_information(info):
-#     test = list(parse_fast_nested('dump.xml', 'timestep', ['time'], 'vehicle', ['id', 'pos', 'speed']))
 
 # noinspection SpellCheckingInspection
 def generate_routefile():
@@ -182,7 +172,7 @@ if __name__ == "__main__":
 
     df_dump_xml = dump_xml_to_df(root)
 
-    print(df_dump_xml.head(5))
+    print(df_dump_xml.tail(5))
 
     pd.DataFrame.to_csv(df_dump_xml, 'simulationStats.csv')
     dfi.export(df_dump_xml, 'df_dump_xml.png', max_rows=20)
