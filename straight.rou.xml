@@ -1,11 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- generated via update_routefile() in run.py -->
-<routes>
-   <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>
-   <vehicle id="car1" type="CAR1" depart="0" departPos="16.69">
-       <route edges="E0"/>
-   </vehicle>
-   <vehicle id="car2" type="CAR1" depart="0" departPos="16.69">
-       <route edges="E0"/>
-   </vehicle>
+        <!-- generated via update_routefile() in run.py -->
+        <routes>
+           <vType id="passenger1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="33.33" guiShape="passenger"/>
+         
+<route id="route0" edges="E0 E12 E4 E7"/>
+            
+<route id="route1" edges="-E7 -E4 -E12 -E0"/>
+            
+<route id="route2" edges="-E6 -E12 E2"/>
+            
+
+                <vehicle id="car0" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
+                
+
+                <vehicle id="car1" type="passenger1" route="route0" depart="0" departLane="random" departEdge="3" departPos="160.46" departSpeed="2.60"/>
+                
+
+                <vehicle id="car2" type="passenger1" route="route0" depart="0" departLane="random" departEdge="3" departPos="161.16" departSpeed="2.72"/>
+                
+
+                <vehicle id="car3" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
+                
+
+                <vehicle id="car4" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
+                
+
+                <vehicle id="car5" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
+                
+
+                <vehicle id="car6" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
+                
+
+                <vehicle id="car7" type="passenger1" route="route0" depart="0" departLane="random" departEdge="3" departPos="130.24" departSpeed="2.15"/>
+                
+
+                <vehicle id="car8" type="passenger1" route="route0" depart="0" departLane="random" departEdge="3" departPos="128.08" departSpeed="2.52"/>
+                
+
+                <vehicle id="car9" type="passenger1" route="route0" depart="0" departLane="random" departEdge="3" departPos="100.70" departSpeed="2.17"/>
+                
 </routes>
