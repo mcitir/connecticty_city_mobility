@@ -1,6 +1,8 @@
+# ignored folders
 .DS_Store
 __pycache__
 .idea
 .ipynb_checkpoints
 
+# ignored files
 Untitled.ipynb
