@@ -24,12 +24,6 @@ import pandas as pd
 import xmltodict
 import numpy as np
 
-
-# # count number of dictionary having the same key in a list of dictionaries
-# def count_key(list_of_dict, key):
-#     return sum(1 for d in list_of_dict if key in d)
-
-
 # we need to import python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
@@ -43,6 +37,13 @@ import csv
 import dataframe_image as dfi
 
 
+def parse_xml(xml_file):
+    # parse the xml file
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    return root
+
+
 def random_route(routes):
     selected_route = [random.choice(list(routes.keys()))]
     return selected_route
@@ -54,6 +55,13 @@ def get_order_in_datalist(datalist, key):
 
 def concat_list_elements(datalist):
     return ' '.join(['{}'.format(item) for item in datalist])
+
+
+def get_property(car, property_, stats):
+    # get the property of the car
+    property_of_car = stats.loc[stats['carID'] == car][property_].tolist()[0]
+    print("{} of {} is {}".format(property_, car, property_of_car))
+    return property_of_car
 
 
 def dump_xml_to_df(root):
@@ -71,7 +79,7 @@ def dump_xml_to_df(root):
                                   'speed': str(child3.attrib['speed'])}
                     temporary_df = pd.DataFrame([dictSeries])
                     df_total = pd.concat([df_total, temporary_df], ignore_index=True, keys=['time', 'carID'])
-    #df_total = df_total.sort_values(['time', 'carID']).reset_index(drop=True)
+    # df_total = df_total.sort_values(['time', 'carID']).reset_index(drop=True)
     return df_total
 
 
@@ -100,12 +108,14 @@ def tripinfo_xml_to_df(root):
         temp_df = pd.DataFrame([dictSeries])
         df_total = pd.concat([df_total, temp_df], ignore_index=False)
 
-    #df_total = df_total.sort_values(['carID']).reset_index(drop=True)
+    # df_total = df_total.sort_values(['carID']).reset_index(drop=True)
     return df_total
+
 
 # noinspection SpellCheckingInspection
 def generate_routefile():
-    random.seed(42)  # make tests reproducible
+    # Create a temporary dictionary to store the carID and onRouteAtStart
+    assigned_routes = {}
 
     with open("straight.rou.xml", "w") as routes:
         print("""<?xml version="1.0" encoding="UTF-8"?>
@@ -120,67 +130,73 @@ def generate_routefile():
     </vehicle>
 </routes>
 """, file=routes)
+    return assigned_routes
 
 
 def update_routefile():
-    random.seed(42)  # make tests reproducible
-
-    #print(type(df_stats[df_stats['carID'] == 'car1']['speed'].iloc[0]))
-    #print(df_stats.tail(10))
+    # Create a temporary dictionary to store the carID and onRouteAtStart
+    assigned_routes = {}
 
     with open("straight.rou.xml", "w") as update_routes:
         print(f"""<?xml version="1.0" encoding="UTF-8"?>
         <!-- generated via update_routefile() in run.py -->
         <routes>
-           <vType id="passenger1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="33.33" guiShape="passenger"/>
+            <vType id="passenger1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="33.33" guiShape="passenger"/>
          """, file=update_routes)
         for key, value in routes.items():
-            # print("KEY: ", key)
-            # print("VALUE: ", value)
-            # print("CONCAT: ", concat_list_elements(value))
-            print(f"""<route id="{key}" edges="{concat_list_elements(value)}"/>
-            """, file=update_routes)
+            print(f"""
+                <route id="{key}" edges="{concat_list_elements(value)}"/>""", file=update_routes)
         for i in range(10):
-            # "car{i}" in the list of 'carIDs_for_next_simulation'
-            if 'car{}'.format(i) in carIDs_for_next_simulation:
-                print(f"The car{i} will be added to the next simulation")
-                wasOnRoute = 'route0'
-                edge = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['edgeID'].tolist()[0]
-                lane = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['laneID'].tolist()[0]
+            # "car{i}" in the list of 'carIDs_from_previous_simulation'
+            if 'car{}'.format(i) in carIDs_from_previous_simulation:
+                print(f"The car{i} will be added from the previous simulation")
+                # wasOnRoute = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i), 'onRouteAtStart'].iloc[0]
+                # print(df_stats_last_time.tail(10))
+                print("HEYOOOOOOOOOOOOOOOOO", df_stats_last_time.loc[df_stats_last_time['carID'] == f'car{i}', 'onRouteAtStart'].iloc[0])
+                # Assign selected route to the car:
+                assigned_routes[f'car{i}'] = df_stats_last_time.loc[df_stats_last_time['carID'] == f'car{i}', 'onRouteAtStart'].iloc[0]
+
+                # if wasOnRoute == True:
+                #     wasOnRoute = 'route1'
+                #     print(f"The car{i} was on the {wasOnRoute} becasue it was not on the route in the last simulation")
+
+                # edge = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['edgeID'].tolist()[0]
+                # lane = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['laneID'].tolist()[0]
                 pos = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['pos'].tolist()[0]
                 speed = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i)]['speed'].tolist()[0]
-                #print(f"The car {i} departedEdge:{edge}, departeLane:{lane},departedPos:{pos},departedSpeed:{speed}")
+                edge_is_ = get_property("car{}".format(i), 'edgeID', df_stats_last_time)
+                lane_is_ = get_property("car{}".format(i), 'laneID', df_stats_last_time)
+                print("lane:", lane_is_.split('_')[-1])
+                # print(f"The car {i} departedEdge:{edge}, departeLane:{lane},departedPos:{pos},departedSpeed:{speed}")
+                # routes['route0'],'E7')
+                # print(f"This is route: {routes[wasOnRoute]}")
+                # print(f"Get order of the edge: {get_order_in_datalist(routes[wasOnRoute], edge_is_)}")
+
+                # {wasOnRoute}
+                # {get_order_in_datalist(routes[wasOnRoute], edge_is_)}
                 print(f"""
-                <vehicle id="car{i}" type="passenger1" route="{wasOnRoute}" depart="0" departLane="random" departEdge="{get_order_in_datalist(routes['route0'],'E7')}" departPos="{pos}" departSpeed="{speed}"/>
-                """, file=update_routes)
-                del edge, lane, pos, speed
+                <vehicle id="car{i}" type="passenger1" route="{assigned_routes[f'car{i}']}" depart="0" departLane="{lane_is_.split('_')[-1]}" departEdge="1" departPos="{pos}" departSpeed="{speed}"/>""", file=update_routes)
+                del edge_is_, lane_is_, pos, speed
             else:
                 selected = random_route(routes)
+                # if 'onRoute' in df_stats.columns:
+                    # df_stats['onRoute'].loc[df_stats['carID'] == 'car{}'.format(i)] = selected[0]
+
+                    # if 'car{}'.format(i) is not in df_stats_temp['carID'].tolist(), add it to the df_stats_temp:
+                    # df_temp.append({'carID': 'car{}'.format(i), 'onRoute': selected[0]}, ignore_index=True)
+                    # if 'car{}'.format(i) not in df_temp['carID'].tolist():
+                    #     df_temp = df_temp.append(f"car{i}")
+                    #     print(f"The car{i} was not in the df_temp, so it was added")
+                    # df_temp['onRoute'].loc[df_stats['carID'] == 'car{}'.format(i)] = selected[0]
+
+                assigned_routes[f'car{i}'] = selected[0]
                 print(f"The car {i} will be reroute to the {selected[0]}")
             # print(selected[0])
             # departEdge = "{get_order_in_datalist(routes['route0'],'E7')}"
                 print(f"""
-                <vehicle id="car{i}" type="passenger1" route="{selected[0]}" departPos="0.00"  depart="0"/>
-                """, file=update_routes)
-            # departPos="{df_stats.loc[(df_stats['time'] == 99.00) & (df_stats['carID'] == 'car9'), 'pos'].array[0]}"
-            # departEdge = "E12"
-            # departLane = "E12_0"
-            # departPos = "14.00"
-            # departSpeed = "2.00"
-            #
+                <vehicle id="car{i}" type="passenger1" route="{assigned_routes[f'car{i}']}" departPos="0.00"  depart="0"/>""", file=update_routes)
         print("""</routes>""", file=update_routes)
-
-
-        # print("""<?xml version="1.0" encoding="UTF-8"?>""", file=update_routes)
-        # print("""<!-- generated via update_routefile() in run.py -->""", file=update_routes)
-        # print("""<routes>""", file=update_routes)
-        # print("""   <vType id="CAR1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="1" guiShape="passenger"/>""", file=update_routes)
-        # Vehicles = ["\"car1\"", "\"car2\""]
-        # for vehicle in Vehicles:
-        #     print("""   <vehicle id={carName} type="CAR1" depart="0" departPos="16.69">""".format(carName=vehicle), file=update_routes)
-        #     print("""       <route edges="E0"/>""", file=update_routes)
-        #     print("""   </vehicle>""", file=update_routes)
-        # print("""</routes>""", file=update_routes)
+    return assigned_routes
 
 
 def generate_netfile():
@@ -193,16 +209,16 @@ def generate_netfile():
 def run():
     """execute the TraCI control loop"""
     step = 0
-    while step < 120:
+    while step < 130:
         traci.simulationStep()
         # print("simulation step {}".format(step))
         # for veh_id in traci.vehicle.getIDList():
         #     print("vehicle {} at position {}".format(veh_id, traci.vehicle.getPosition(veh_id)))
         step += 1
         time.sleep(0.1)
-        #print(sumolib.statistics.round(1.5))
-        #s = sumolib.statistics.Statistics(10)
-        #print(s.toString())
+        # print(sumolib.statistics.round(1.5))
+        # s = sumolib.statistics.Statistics(10)
+        # print(s.toString())
     traci.close()
     sys.stdout.flush()
 
@@ -229,35 +245,33 @@ if __name__ == "__main__":
     routes = {'route0': ['E0', 'E12', 'E4', 'E7'],
               'route1': ['-E7', '-E4', '-E12', '-E0'],
               'route2': ['-E6', '-E12', 'E2']}
-    # route0 = ['E0', 'E12', 'E4', 'E7']
-    # route1 = ['-E7', '-E4', '-E12', '-E0']
-    # route2 = ['-E6', '-E12', 'E2']
-    # routes = [route0, route1, route2]
+
+    # Import data from the csv file and store it in a dataframe named df_stats
     df_stats = pd.read_csv('simulationStats.csv', dtype=str, keep_default_na=False)
+
+    # filter for the last time step
     df_stats_last_time = df_stats.loc[df_stats['time'] == df_stats['time'].tail(1).tolist()[0]]
-    # The list of carIDs that will be used for the next simulation
-    carIDs_for_next_simulation = df_stats_last_time['carID'].tolist()
-    print(carIDs_for_next_simulation)
+
+    # Keep track how many times the simulation has been restarted
+    if 'HasRun' not in df_stats_last_time.columns:
+        HasRun = 1
+    else:
+        HasRun = int(df_stats_last_time['HasRun'].tolist()[0]) + 1
+        print("HasRun:", HasRun)
+
+    # List of vehicle IDs that did not complete their route in the previous simulation step
+    carIDs_from_previous_simulation = df_stats_last_time['carID'].tolist()
+    print(carIDs_from_previous_simulation)
 
     print(f"Order: {get_order_in_datalist(routes['route0'], 'E7')}")
 
-    #selected = random_route(routes)
-    #print(random_route(routes))
-    # print key and value of dictionary
-    # for key, value in selected.items():
-    #     print(f"{key}: {value}")
-    # print("key:", list(selected.keys())[0])
-    # print("value:", list(selected.values())[0])
-
-
-    #print(routes[selected])
-    #print(f"{selected.keys()}: {concat_list_elements(routes[selected])}")
-
     # first, generate the route file for this simulation
     if os.path.exists("tripinfo.xml"):
-        update_routefile()
+        assigned_routes = update_routefile()
+        print("OnRoute:")
+        print(assigned_routes)
     else:
-        generate_routefile()
+        assigned_routes = generate_routefile()
     # generate_routefile()
     # generate_netfile()
 
@@ -268,19 +282,14 @@ if __name__ == "__main__":
                  "--start", "--quit-on-end", "--netstate-dump", "dump.xml"])
     run()
 
-    dump_tree = ET.parse('dump.xml')
-    dump_root = dump_tree.getroot()
-    # print(root.tag, root.attrib)
-    last_time_step = str(dump_root[len(dump_root) - 1].attrib['time'])
-    print("Last time:", last_time_step)
-    # print(type(last_time_step))
-
+    dump_root = parse_xml('dump.xml')
     df_dump_xml = dump_xml_to_df(dump_root)
 
-    tripinfo_tree = ET.parse('tripinfo.xml')
-    tripinfo_root = tripinfo_tree.getroot()
-
+    tripinfo_root = parse_xml('tripinfo.xml')
     df_tripinfo_xml = tripinfo_xml_to_df(tripinfo_root)
+
+    last_time_step = str(dump_root[len(dump_root) - 1].attrib['time'])
+    print("Last time:", last_time_step)
 
     df_stats = pd.merge(df_dump_xml, df_tripinfo_xml, on='carID', how='left')
     df_stats = df_stats[['time', 'carID', 'depart', 'edgeID',
@@ -289,9 +298,18 @@ if __name__ == "__main__":
                          'departSpeed', 'speed', 'arrivalSpeed',
                          'departDelay', 'waitingTime', 'duration', 'arrival',
                          'routeLength', 'rerouteNo', 'speedFactor', 'vaporized']]
-    #print(df_dump_xml.tail(15))
-    #print(df_tripinfo_xml.tail(15))
-    #print(df_stats.tail(15))
+
+    # Add a new column to dataframe which counts how many times the simulation has been restarted
+    df_stats['HasRun'] = HasRun
+
+    # Add a new column to dataframe which records the routes assigned to each vehicle
+    df_stats['onRouteAtStart'] = df_stats['carID'].map(assigned_routes)
+
+    # print("onRoute column exists")
+    # for key, value in assigned_routes.items():
+    #     # change value of onRoute column to the assigned route value by matching 'carID' column with the key
+    #     df_stats.loc[df_stats['carID'] == key, 'onRouteAtStart'] = value
+    #     print("onRoute column added", df_stats.loc[df_stats['carID'] == key, 'onRouteAtStart'])
 
     pd.DataFrame.to_csv(df_stats, 'simulationStats.csv', index=False, quoting=csv.QUOTE_ALL)
     pd.DataFrame.to_csv(df_dump_xml, 'dump.csv', index=False, quoting=csv.QUOTE_ALL)
