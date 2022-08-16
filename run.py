@@ -151,6 +151,7 @@ def update_routefile():
             if 'car{}'.format(i) in carIDs_from_previous_simulation:
                 print(f"The car{i} will be added from the previous simulation")
                 # wasOnRoute = df_stats_last_time.loc[df_stats_last_time['carID'] == 'car{}'.format(i), 'onRouteAtStart'].iloc[0]
+
                 # print(df_stats_last_time.tail(10))
                 print("HEYOOOOOOOOOOOOOOOOO", df_stats_last_time.loc[df_stats_last_time['carID'] == f'car{i}', 'onRouteAtStart'].iloc[0])
                 # Assign selected route to the car:
