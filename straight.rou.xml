@@ -4,29 +4,30 @@
             <vType id="passenger1" accel="0.8" decel="4.5" sigma="0.5" length="5" minGap="2.5" maxSpeed="33.33" guiShape="passenger"/>
          
 
-                <route id="route0" edges="E0 E12 E4 E7"/>
+            <route id="route0" edges="E0 E12 E4 E7"/>
 
-                <route id="route1" edges="-E7 -E4 -E12 -E0"/>
+            <route id="route1" edges="-E7 -E4 -E12 -E0"/>
 
-                <route id="route2" edges="-E6 -E12 E2"/>
+            <route id="route2" edges="-E6 -E12 E2"/>
 
-                <vehicle id="car0" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
+                <vehicle id="car0" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car1" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
+                <vehicle id="car1" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car2" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
+                <vehicle id="car2" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car3" type="passenger1" route="route0" depart="0" departLane="0" departEdge="1" departPos="232.36" departSpeed="2.77"/>
+                <vehicle id="car3" type="passenger1" route="route1" depart="0" departLane="0" departEdge="3" departPos="422.46" departSpeed="14.82"/>
 
-                <vehicle id="car4" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
+                <vehicle id="car4" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car5" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
+                <vehicle id="car5" type="passenger1" route="route2" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car6" type="passenger1" route="route1" departPos="0.00"  depart="0"/>
+                <vehicle id="car6" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
 
-                <vehicle id="car7" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
+                <vehicle id="car7" type="passenger1" route="route1" depart="0" departLane="0" departEdge="3" departPos="189.04" departSpeed="11.94"/>
 
-                <vehicle id="car8" type="passenger1" route="route0" departPos="0.00"  depart="0"/>
+                <vehicle id="car8" type="passenger1" route="route0" depart="0" departLane="0" departEdge="1" departPos="114.45" departSpeed="2.36"/>
 
-                <vehicle id="car9" type="passenger1" route="route0" depart="0" departLane="0" departEdge="1" departPos="267.61" departSpeed="11.81"/>
-</routes>
+                <vehicle id="car9" type="passenger1" route="route1" depart="0" departLane="0" departEdge="3" departPos="120.09" departSpeed="11.88"/>
+
+        </routes>
