@@ -12,4 +12,6 @@ To achieve this,
 
 Thus, a more realistic city traffic can be achieved. Each game round represents a simulation over an equal time interval. 
 
-Although the game concept is time-independent, this script creates a state of continuity so that the simulation can continue in accordance with this concept. 
+Although the game concept is time-independent, this script creates a state of continuity so that the simulation can continue in accordance with this concept.
+
+![Simulation Screenshot 1](pics/sim01.jpg "Simulation Screenshot 1")
