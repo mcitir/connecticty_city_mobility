@@ -1,0 +1,3 @@
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <edgeData type="emissions" id="edgeStatsEmissions" file="dump/dump_edges_co2.xml" excludeEmpty="true"/>
+</additional>

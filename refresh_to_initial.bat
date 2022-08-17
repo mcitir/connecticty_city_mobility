@@ -1,2 +1,2 @@
-@py.exe refresh_to_initial.py %*
+@py.exe scripts/refresh_to_initial.py %*
 @pause

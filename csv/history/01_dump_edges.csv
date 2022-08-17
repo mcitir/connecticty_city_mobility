@@ -1,0 +1,3 @@
+"id","sampledSeconds","traveltime","overlapTraveltime","density","laneDensity","occupancy","waitingTime","timeLoss","speed","speedRelative","departed","arrived","entered","left","laneChangedFrom","laneChangedTo"
+"E0","526.76","51.13","52.81","10.43","3.48","1.64","0.00","136.22","9.56","0.69","10","0","0","10","20","20"
+"E12","263.65","116.62","118.57","8.70","2.90","1.39","0.00","19.81","2.57","0.93","0","0","10","0","15","15"

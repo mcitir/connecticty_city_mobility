@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import xmltodict
 import numpy as np
+import shutil
 
 # we need to import python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -79,6 +80,39 @@ def dump_xml_to_df(root):
                     temporary_df = pd.DataFrame([dictSeries])
                     df_total = pd.concat([df_total, temporary_df], ignore_index=True, keys=['time', 'carID'])
     # df_total = df_total.sort_values(['time', 'carID']).reset_index(drop=True)
+    return df_total
+
+
+def dump_edges_xml_to_df(root):
+    df_total = pd.DataFrame()
+    # df_total = pd.DataFrame(
+    #     columns=['id', 'sampledSeconds', 'traveltime', 'overlapTraveltime', 'density', 'laneDensity',
+    #              'occupancy', 'waitingTime', 'timeLoss', 'speed', 'speedRelative', 'departed',
+    #              'arrived', 'entered', 'left', 'laneChangedFrom', 'laneChangedTo'])
+    dictSeries = {}
+    for interval in root:
+        for edge in interval:
+            for ele in edge.attrib.keys():
+                dictSeries[str(ele)] = edge.attrib[str(ele)]
+            # dictSeries = {'id': edge.attrib['id'],
+            #               'numVehicleOnEdgePerSec': edge.attrib['sampledSeconds'],
+            #               'traveltime': edge.attrib['traveltime'],
+            #               'overlapTraveltime': edge.attrib['overlapTraveltime'],
+            #               'density': edge.attrib['density'],
+            #               'laneDensity': edge.attrib['laneDensity'],
+            #               'occupancy': edge.attrib['occupancy'],
+            #               'waitingTime': edge.attrib['waitingTime'],
+            #               'timeLoss': edge.attrib['timeLoss'],
+            #               'speed': edge.attrib['speed'],
+            #               'speedRelative': edge.attrib['speedRelative'],
+            #               'departed': edge.attrib['departed'],
+            #               'arrived': edge.attrib['arrived'],
+            #               'entered': edge.attrib['entered'],
+            #               'left': edge.attrib['left'],
+            #               'laneChangedFrom': edge.attrib['laneChangedFrom'],
+            #               'laneChangedTo': edge.attrib['laneChangedTo']}
+            temporary_df = pd.DataFrame([dictSeries])
+            df_total = pd.concat([df_total, temporary_df], ignore_index=True)
     return df_total
 
 
@@ -141,7 +175,7 @@ def generate_routefile():
     return assigned_routes
 
 
-def update_routefile():
+def update_routefile(df_stats_last_time):
     # Create a temporary dictionary to store the carID and onRouteAtStart
     assigned_routes = {}
 
@@ -162,7 +196,6 @@ def update_routefile():
                 assigned_routes[f'car{i}'] = df_stats_last_time.loc[df_stats_last_time['carID'] == f'car{i}',
                                                                     'onRouteAtStart'].iloc[0]
                 # print(f"Assigned {assigned_routes}")
-                print(df_stats_last_time)
                 pos_is_ = get_property("car{}".format(i), 'pos', df_stats_last_time)
                 speed_is_ = get_property("car{}".format(i), 'speed', df_stats_last_time)
                 edge_is_ = get_order_in_datalist(routes[assigned_routes[f'car{i}']],
@@ -230,38 +263,43 @@ if __name__ == "__main__":
               'route2': ['-E6', '-E12', 'E2']}
 
     # Generate or update the route file for the simulation
-    if not os.path.exists("tripinfo.xml") and not os.path.exists("simulationStats.csv"):
+    if not os.path.exists("dump/tripinfo.xml") or not os.path.exists("csv/simulationStats.csv"):
         first_round = True
         assigned_routes = generate_routefile()
         HasRun = 1
+        print("First round of simulation")
         # generate_netfile()
     else:
         first_round = False
         # Import data from the csv file and store it in a dataframe named df_stats
-        df_stats = pd.read_csv('simulationStats.csv', dtype=str, keep_default_na=False)
+        df_stats = pd.read_csv('csv/simulationStats.csv', dtype=str, keep_default_na=False)
+        #print(df_stats.head(20))
+        print("Further round of simulation")
 
         # filter for the last time step
         df_stats_last_time = df_stats.loc[df_stats['time'] == df_stats['time'].tail(1).tolist()[0]]
         HasRun = int(df_stats_last_time['HasRun'].tolist()[0]) + 1
         # List of vehicle IDs that did not complete their route in the previous simulation step
         carIDs_from_previous_simulation = df_stats_last_time['carID'].tolist()
-        print("From previous simulation:", carIDs_from_previous_simulation)
-        assigned_routes = update_routefile()
-        print("OnRoute:")
-        print(assigned_routes)
+        print("Cars from previous simulation:", carIDs_from_previous_simulation)
+        assigned_routes = update_routefile(df_stats_last_time)
+    print("Assigned Routes:", assigned_routes)
 
+    # If directory 'dump' does not exist, create it
+    if not os.path.exists("dump"):
+        os.makedirs("dump")
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs
     traci.start([sumoBinary, "-c", "straight.sumocfg",
-                 "--tripinfo-output", "tripinfo.xml", "--tripinfo-output.write-unfinished", "True",
-                 "--start", "--quit-on-end", "--netstate-dump", "dump.xml"])
+                 "--tripinfo-output", "dump/tripinfo.xml", "--tripinfo-output.write-unfinished", "True",
+                 "--start", "--quit-on-end", "--netstate-dump", "dump/dump.xml"])
     run()
 
     # Update the simulation results after the simulation has ended
-    dump_root = parse_xml('dump.xml')
+    dump_root = parse_xml('dump/dump.xml')
     df_dump_xml = dump_xml_to_df(dump_root)
 
-    tripinfo_root = parse_xml('tripinfo.xml')
+    tripinfo_root = parse_xml('dump/tripinfo.xml')
     df_tripinfo_xml = tripinfo_xml_to_df(tripinfo_root)
 
     df_stats = pd.merge(df_dump_xml, df_tripinfo_xml, on='carID', how='left')
@@ -274,19 +312,46 @@ if __name__ == "__main__":
 
     # Add a new column to dataframe which counts how many times the simulation has been restarted
     df_stats['HasRun'] = HasRun
+    print("Running Time:", HasRun)
 
     # Add a new column to dataframe which records the routes assigned to each vehicle
     df_stats['onRouteAtStart'] = df_stats['carID'].map(assigned_routes)
 
-    pd.DataFrame.to_csv(df_stats, 'simulationStats.csv', index=False, quoting=csv.QUOTE_ALL)
-    pd.DataFrame.to_csv(df_dump_xml, 'dump.csv', index=False, quoting=csv.QUOTE_ALL)
-    pd.DataFrame.to_csv(df_tripinfo_xml, 'tripinfo.csv', index=False, quoting=csv.QUOTE_ALL)
+    # Calculate based on Edge Statistics
+    dump_edge = parse_xml('dump/dump_edges.xml')
+    df_dump_edges_xml = dump_edges_xml_to_df(dump_edge)
 
-    dfi.export(df_dump_xml, 'df_dump_xml.png', max_rows=20)
-    dfi.export(df_tripinfo_xml, 'df_tripinfo_xml.png', max_rows=20)
-    dfi.export(df_stats, 'df_stats.png', max_rows=40)
+    dump_edge_co2 = parse_xml('dump/dump_edges_co2.xml')
+    df_dump_edges_co2_xml = dump_edges_xml_to_df(dump_edge_co2)
 
+    # If directory 'csv' does not exist, create it
+    if not os.path.exists("csv"):
+        os.makedirs("csv")
+    pd.DataFrame.to_csv(df_stats, 'csv/simulationStats.csv', index=False, quoting=csv.QUOTE_ALL)
+    pd.DataFrame.to_csv(df_dump_xml, 'csv/dump.csv', index=False, quoting=csv.QUOTE_ALL)
+    pd.DataFrame.to_csv(df_tripinfo_xml, 'csv/tripinfo.csv', index=False, quoting=csv.QUOTE_ALL)
+    pd.DataFrame.to_csv(df_dump_edges_xml, 'csv/dump_edges.csv', index=False, quoting=csv.QUOTE_ALL)
+    pd.DataFrame.to_csv(df_dump_edges_co2_xml, 'csv/dump_edges_co2.csv', index=False, quoting=csv.QUOTE_ALL)
 
+    # Copy 'csv/simulationStats.csv' file to 'csv/history/simulationStats_<HasRun>.csv
+    if not os.path.exists("csv/history"):
+        os.makedirs("csv/history")
+    shutil.copy('csv/simulationStats.csv', 'csv/history/0' + str(HasRun) + '_simulationStats.csv')
+    shutil.copy('csv/dump.csv', 'csv/history/0' + str(HasRun) + '_dump.csv')
+    shutil.copy('csv/tripinfo.csv', 'csv/history/0' + str(HasRun) + '_tripinfo.csv')
+    shutil.copy('csv/dump_edges.csv', 'csv/history/0' + str(HasRun) + '_dump_edges.csv')
+    shutil.copy('csv/dump_edges_co2.csv', 'csv/history/0' + str(HasRun) + '_dump_edges_co2.csv')
+
+    # If directory 'stats' does not exist, create it
+    if not os.path.exists('stats'):
+        os.makedirs('stats')
+    dfi.export(df_dump_xml, f'stats/0{HasRun}_df_dump_xml.png', max_rows=30)
+    dfi.export(df_dump_edges_xml, f'stats/0{HasRun}_df_dump_edges_xml.png', max_rows=30)
+    dfi.export(df_dump_edges_co2_xml, f'stats/0{HasRun}_df_dump_edges_co2_xml.png', max_rows=30)
+    dfi.export(df_tripinfo_xml, f'stats/0{HasRun}_df_tripinfo_xml.png', max_rows=30)
+    dfi.export(df_stats, f'stats/0{HasRun}_df_stats.png', max_rows=30)
+
+    print("Simulation ended !!")
 
 
 

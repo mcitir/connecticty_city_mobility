@@ -4,10 +4,11 @@
     <input>
         <net-file value="straight.net.xml"/>
         <route-files value="straight.rou.xml"/>
+        <additional-files value="straight.add_edges.xml, straight.add_edges_co2.xml"/>
     </input>
     <time>
         <begin value="0"/>
         <end value="101"/>
     </time>
     <time-to-teleport value="-1"/>
-</configuration>
+</configuration>    

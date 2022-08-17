@@ -47,9 +47,9 @@
         <lane id="-E0_2" index="2" speed="13.89" length="500.00" shape="-13.60,1001.60 -500.00,1001.60"/>
     </edge>
     <edge id="-E12" from="J0" to="911" priority="-1">
-        <lane id="-E12_0" index="0" speed="13.89" length="300.00" shape="-8.00,1286.40 -8.00,1013.60"/>
-        <lane id="-E12_1" index="1" speed="13.89" length="300.00" shape="-4.80,1286.40 -4.80,1013.60"/>
-        <lane id="-E12_2" index="2" speed="13.89" length="300.00" shape="-1.60,1286.40 -1.60,1013.60"/>
+        <lane id="-E12_0" index="0" speed="2.78" length="300.00" shape="-8.00,1286.40 -8.00,1013.60"/>
+        <lane id="-E12_1" index="1" speed="2.78" length="300.00" shape="-4.80,1286.40 -4.80,1013.60"/>
+        <lane id="-E12_2" index="2" speed="2.78" length="300.00" shape="-1.60,1286.40 -1.60,1013.60"/>
     </edge>
     <edge id="-E2" from="J1" to="911" priority="-1" length="100.00">
         <lane id="-E2_0" index="0" speed="13.89" length="100.00" shape="8.00,900.00 8.00,986.40"/>
